@@ -6,10 +6,13 @@ import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/role_router.dart';
 import 'services/firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await dotenv.load(fileName: ".env");
   runApp(const MedKenesApp());
 }
 

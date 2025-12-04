@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354544368265",
+    "project_id": "newmedkenes",
+    "storage_bucket": "newmedkenes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354544368265:android:f52bfffc4a36ba75d16458",
+        "android_client_info": {
+          "package_name": "com.example.medkenes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9aHT3pdY57qy1ft3-aPDhwPMDy9coIq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

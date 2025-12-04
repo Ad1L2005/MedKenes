@@ -1,0 +1,77 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "asia-east1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "newmedkenes",
+          "appId": "1:354544368265:android:f52bfffc4a36ba75d16458",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "newmedkenes",
+          "appId": "1:354544368265:ios:2904e947687333c5d16458",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "newmedkenes",
+          "appId": "1:354544368265:ios:2904e947687333c5d16458",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "newmedkenes",
+          "configurations": {
+            "android": "1:354544368265:android:f52bfffc4a36ba75d16458",
+            "ios": "1:354544368265:ios:2904e947687333c5d16458",
+            "macos": "1:354544368265:ios:2904e947687333c5d16458",
+            "windows": "1:354544368265:web:f143c2a795ee9158d16458"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

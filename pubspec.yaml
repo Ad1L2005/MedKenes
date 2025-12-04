@@ -57,3 +57,4 @@ flutter:
     - assets/ambulance_small.png
     - assets/ambulance_v2.png
     - assets/ambulance_v3.png
+    - .env

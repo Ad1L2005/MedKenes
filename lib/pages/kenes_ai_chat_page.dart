@@ -19,12 +19,12 @@ class _KenesAIChatPageState extends State<KenesAIChatPage> {
   bool _isLoading = false;
 
   // Безопасно берём ключ из .env
-  String get _apiKey => dotenv.env['XAI_API_KEY'] ?? '';
+  String get _apiKey => dotenv.env['GROK_API_KEY'] ?? '';
 
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty || _isLoading || _apiKey.isEmpty) {
       if (_apiKey.isEmpty) {
-        _addError("XAI API кілті табылмады. .env файлын тексеріңіз.");
+        _addError("GROK API кілті табылмады. .env файлын тексеріңіз.");
       }
       return;
     }

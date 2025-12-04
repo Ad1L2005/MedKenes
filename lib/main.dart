@@ -27,7 +27,7 @@ class MedKenesApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF06B6D4)),
-        fontFamily: 'GoogleSans',
+        // fontFamily: 'GoogleSans',
         scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
 

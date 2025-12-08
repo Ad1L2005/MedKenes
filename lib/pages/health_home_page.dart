@@ -1,6 +1,9 @@
-// lib/pages/health_home_page.dart — ГОТОВО, КРАСИВО, КАК В ПРЕМИУМ-ПРИЛОЖЕНИИ 2025
+// lib/pages/health_home_page.dart — ТОЛЬКО НАСТОЯЩИЕ ДОКУМЕНТЫ ОТ ВРАЧА
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:medkenes/services/pdf_service.dart';
 
 class HealthHomePage extends StatefulWidget {
   const HealthHomePage({super.key});
@@ -11,6 +14,7 @@ class HealthHomePage extends StatefulWidget {
 
 class _HealthHomePageState extends State<HealthHomePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final String? patientId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -26,6 +30,10 @@ class _HealthHomePageState extends State<HealthHomePage> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    if (patientId == null) {
+      return const Scaffold(body: Center(child: Text("Кіру қажет", style: TextStyle(color: Colors.white))));
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -48,182 +56,155 @@ class _HealthHomePageState extends State<HealthHomePage> with SingleTickerProvid
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          // 1. ПРИЁМЫ
-          AppointmentsTab(),
-          // 2. ДОКУМЕНТЫ
-          DocumentsTab(),
-          // 3. РЕЦЕПТЫ
-          PrescriptionsTab(),
+        children: [
+          // 1. Приёмы — можно оставить пустым или позже заполнить
+          const Center(child: Text("Приёмы скоро будут здесь", style: TextStyle(color: Colors.white70))),
+
+          // 2. ДОКУМЕНТЫ — ТОЛЬКО НАСТОЯЩИЕ SMARTDOC ОТ ВРАЧА
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('smartdocs')
+                .where('patientId', isEqualTo: patientId)
+                .where('confirmed', isEqualTo: true)
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.description_outlined, size: 80, color: Colors.white24),
+                      const SizedBox(height: 16),
+                      Text("Әзірге құжаттар жоқ", style: GoogleFonts.manrope(fontSize: 18, color: Colors.white70)),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, i) {
+                  final doc = snapshot.data!.docs[i];
+                  final data = doc.data() as Map<String, dynamic>;
+                  final date = (data['createdAt'] as Timestamp).toDate();
+                  final doctorName = data['doctorName'] ?? 'Дәрігер';
+                  final content = data['content'] as String;
+
+                  return Card(
+                    color: const Color(0xFF1E293B),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFF06B6D4),
+                        child: Text("${date.day}", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                      ),
+                      title: Text("SmartDoc • $doctorName", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)),
+                      subtitle: Text("${date.day}.${date.month}.${date.year}", style: GoogleFonts.manrope(color: Colors.white60)),
+                      trailing: const Icon(Icons.visibility, color: Color(0xFF06B6D4)),
+                      onTap: () {
+                        // Открываем сам документ
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => Container(
+                            height: MediaQuery.of(context).size.height * 0.9,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF0F172A),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                            ),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              children: [
+                                Container(width: 60, height: 6, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(3))),
+                                const SizedBox(height: 16),
+                                Text("SmartDoc • ${date.day}.${date.month}.${date.year}", style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF06B6D4))),
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  child: Card(
+                                    color: const Color(0xFF1E293B),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: SingleChildScrollView(
+                                        child: Text(content, style: GoogleFonts.manrope(fontSize: 16, height: 1.7, color: Colors.white)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+  onPressed: () async {
+    Map<String, dynamic> patientData = {};
+    String patientName = 'Пациент';
+
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(patientId)
+          .get();
+
+      if (userDoc.exists) {
+        patientData = userDoc.data() as Map<String, dynamic>;
+        patientName = patientData['fullName'] ?? 'Пациент';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Деректер жүктелмеді")),
+      );
+    }
+
+    // ИСПРАВЛЕНО: правильное объявление
+    final Timestamp? birthTimestamp = patientData['birthDate'] is Timestamp
+        ? patientData['birthDate'] as Timestamp
+        : null;
+
+    final String birthStr = birthTimestamp != null
+        ? "${birthTimestamp.toDate().day.toString().padLeft(2, '0')}.${birthTimestamp.toDate().month.toString().padLeft(2, '0')}.${birthTimestamp.toDate().year}"
+        : '—';
+
+    final String iin = patientData['iin']?.toString() ?? '—';
+    final String gender = patientData['gender'] == 'male' ? 'Ер' : 'Әйел';
+    final String phone = patientData['phone']?.toString() ?? '—';
+
+    await PdfService.generateOfficialSmartDoc(
+      patientName: patientName,
+      doctorName: doctorName,
+      patientIIN: iin,
+      patientGender: gender,
+      patientBirthDate: birthStr,
+      patientPhone: phone,
+      content: content,
+    );
+  },
+  icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+  label: const Text("PDF жүктеу", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF06B6D4),
+    padding: const EdgeInsets.symmetric(vertical: 18),
+    minimumSize: const Size(double.infinity, 56),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+  ),
+),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
+          // 3. РЕЦЕПТЫ — можно оставить пустым пока
+          const Center(child: Text("Рецепты скоро будут здесь", style: TextStyle(color: Colors.white70))),
         ],
       ),
     );
   }
 }
 
-// ──────────────────────────────────────────────────
-// 1. ПРИЁМЫ
-// ──────────────────────────────────────────────────
-class AppointmentsTab extends StatelessWidget {
-  const AppointmentsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Map<String, String>> visits = [
-      {
-        "date": "2025.03.12",
-        "doctor": "Айгерім Садықова",
-        "specialty": "Эндокринолог",
-        "status": "Аяқталды",
-        "conclusion": "Гипотиреоз, компенсацияда"
-      },
-      {
-        "date": "2025.02.28",
-        "doctor": "Ерлан Қасымов",
-        "specialty": "Кардиолог",
-        "status": "Аяқталды",
-        "conclusion": "АГ 2 дәрежесі"
-      },
-      {
-        "date": "2025.01.15",
-        "doctor": "Айжан Мұхтарова",
-        "specialty": "Невролог",
-        "status": "Аяқталды",
-        "conclusion": "Мигрень"
-      },
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: visits.length,
-      itemBuilder: (context, i) {
-        final v = visits[i];
-        return Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            onTap: () {
-              // Позже — открытие SmartDoc / заключения
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("${v["doctor"]} — қабылдау ашылады...")),
-              );
-            },
-            leading: CircleAvatar(
-              backgroundColor: const Color(0xFF06B6D4),
-              child: Text(v["date"]!.substring(8, 10), style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-            ),
-            title: Text(v["doctor"]!, style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)),
-            subtitle: Text("${v["specialty"]} • ${v["conclusion"]}", style: GoogleFonts.manrope(color: Colors.white70)),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-              child: Text(v["status"]!, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ──────────────────────────────────────────────────
-// 2. ДОКУМЕНТЫ (SmartDocs + выписки)
-// ──────────────────────────────────────────────────
-class DocumentsTab extends StatelessWidget {
-  const DocumentsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _documentTile(context, "SmartDoc • Эндокринолог", "12.03.2025", Icons.description, Colors.cyan),
-        _documentTile(context, "Выписной эпикриз • Стационар №7", "28.02.2025", Icons.local_hospital, Colors.purple),
-        _documentTile(context, "Справка 027/у • Медосмотр", "15.01.2025", Icons.assignment, Colors.orange),
-        _documentTile(context, "SmartDoc • Кардиолог", "28.02.2025", Icons.description, Colors.cyan),
-      ],
-    );
-  }
-
-  Widget _documentTile(BuildContext context, String title, String date, IconData icon, Color color) {
-    return Card(
-      color: const Color(0xFF1E293B),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(backgroundColor: color.withOpacity(0.2), child: Icon(icon, color: color)),
-        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)),
-        subtitle: Text(date, style: GoogleFonts.manrope(color: Colors.white60)),
-        trailing: const Icon(Icons.download, color: Color(0xFF06B6D4)),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("$title жүктелуде...")),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────────────
-// 3. РЕЦЕПТЫ
-// ──────────────────────────────────────────────────
-class PrescriptionsTab extends StatelessWidget {
-  const PrescriptionsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _prescriptionCard(context, "L-Тироксин 100 мкг", "1 таб утром, 30 дней", "12.03.2025 – 11.04.2025", true),
-        _prescriptionCard(context, "Эналаприл 10 мг", "1 таб вечером", "28.02.2025 – 28.05.2025", true),
-        _prescriptionCard(context, "Суматриптан 100 мг", "При приступе", "15.01.2025 – 15.07.2025", false),
-      ],
-    );
-  }
-
-  Widget _prescriptionCard(BuildContext context, String drug, String dosage, String period, bool active) {
-    return Card(
-      color: const Color(0xFF1E293B),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: active ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(Icons.medication, size: 36, color: active ? Colors.green : Colors.grey),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(drug, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text(dosage, style: GoogleFonts.manrope(color: Colors.white70)),
-                  const SizedBox(height: 4),
-                  Text(period, style: GoogleFonts.manrope(fontSize: 12, color: Colors.white60)),
-                ],
-              ),
-            ),
-            if (active)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(20)),
-                child: Text("Белсенді", style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}

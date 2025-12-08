@@ -45,7 +45,7 @@ class _HomeMainPageState extends State<HomeMainPage> with TickerProviderStateMix
     if (_emergencyConfirmed) return;
     setState(() => _isHolding = true);
     _progressController.forward(from: 0);
-    await _tts.speak("5 секундтан кейін жедел жәрдем шақырылады...");
+    await _tts.speak("Скорая помощь будет вызвана через 5 секунд...");
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown == 1) {
@@ -66,7 +66,7 @@ class _HomeMainPageState extends State<HomeMainPage> with TickerProviderStateMix
       _isHolding = false;
       _countdown = 5;
     });
-    _tts.speak("Шақыру тоқтатылды");
+    _tts.speak("Вызов отменён");
   }
 
   void _confirmEmergencyCall() async {
@@ -75,7 +75,7 @@ class _HomeMainPageState extends State<HomeMainPage> with TickerProviderStateMix
       _isHolding = false;
     });
     Vibration.vibrate(pattern: [0, 500, 200, 500, 200, 700]);
-    await _tts.speak("Жедел жәрдем шақырылды! Бригада жолда, 4 минуттан кейін келеді.");
+    await _tts.speak("Вызвали скорую! Бригада уже в пути и прибудет через 4 минуты.");
   }
 
   @override
@@ -121,7 +121,7 @@ class _HomeMainPageState extends State<HomeMainPage> with TickerProviderStateMix
 
                   // Карточка здоровья
                   GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthProfilePage())),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HealthProfilePage())),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Container(
@@ -155,8 +155,6 @@ class _HomeMainPageState extends State<HomeMainPage> with TickerProviderStateMix
 
                   const SizedBox(height: 40),
 
-                  // Большая кнопка 103
-                  // Большая кнопка 103 — теперь чуть выше и красивее расположена
 Expanded(
   child: Padding(
     padding: const EdgeInsets.only(bottom: 100), // ← Вот это и поднимает кнопку!

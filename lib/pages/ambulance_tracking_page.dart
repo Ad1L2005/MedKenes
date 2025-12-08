@@ -1,4 +1,4 @@
-// lib/pages/ambulance_tracking_page.dart — С КАСТОМНОЙ ИКОНКОЙ ambulance_v3.png
+// lib/pages/ambulance_tracking_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,6 +11,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 class AmbulanceTrackingPage extends StatefulWidget {
   const AmbulanceTrackingPage({super.key});
+
   @override
   State<AmbulanceTrackingPage> createState() => _AmbulanceTrackingPageState();
 }
@@ -23,19 +24,18 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
   int _step = 0;
   int _remainingSeconds = 240;
   final FlutterTts _tts = FlutterTts();
-  
 
-  BitmapDescriptor? _ambulanceIcon; // ← наша кастомная иконка
+  BitmapDescriptor? _ambulanceIcon;
 
   final List<LatLng> _ambulancePath = [
-    const LatLng(43.2259501, 76.9056973),
-    const LatLng(43.2280338, 76.9055505),
-    const LatLng(43.2308719, 76.9051354),
-    const LatLng(43.2334788, 76.9047944),
-    const LatLng(43.2352080, 76.9086793),
-    const LatLng(43.238949, 76.889700),
+    const LatLng(43.2143445, 76.8977278),
+    const LatLng(43.2159337, 76.8976406),
+    const LatLng(43.2177159, 76.8973315),
+    const LatLng(43.2177858, 76.8988852),
+    const LatLng(43.2179150, 76.9012465),
+    const LatLng(43.2190546, 76.9020160),
+    const LatLng(43.2204230, 76.9047133),
   ];
-  
 
   @override
   void initState() {
@@ -50,12 +50,11 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
     super.dispose();
   }
 
-  // ЗАГРУЖАЕМ ТВОЮ КРАСИВУЮ ИКОНКУ СКОРОЙ
   Future<void> _loadCustomIcon() async {
     final ByteData data = await rootBundle.load('assets/ambulance_v3.png');
     final ui.Codec codec = await ui.instantiateImageCodec(
       data.buffer.asUint8List(),
-      targetWidth: 120, // размер иконки на карте
+      targetWidth: 120,
       targetHeight: 350,
     );
     final ui.FrameInfo frame = await codec.getNextFrame();
@@ -80,7 +79,7 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
       }
     }
 
-    _ambulancePath.last = _userLocation!;
+    _ambulancePath[_ambulancePath.length - 1] = _userLocation!;
 
     setState(() {
       _markers.add(Marker(
@@ -90,7 +89,6 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
         infoWindow: const InfoWindow(title: "Мен осындамын"),
       ));
 
-      // Первая позиция скорой — ждём загрузки иконки
       if (_ambulanceIcon != null) {
         _markers.add(Marker(
           markerId: const MarkerId('ambulance'),
@@ -113,7 +111,6 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
         timer.cancel();
         await _tts.speak("Скорая помощь прибыла! Врачи уже поднимаются по лестнице.");
         if (mounted) {
-          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Скорая помощь прибыла!", style: TextStyle(fontSize: 20, color: Colors.white)),
@@ -130,7 +127,6 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
       final prevPos = _ambulancePath[_step - 1];
       final rotation = _calculateBearing(prevPos, currentPos);
 
-      // Обновляем только если иконка загружена
       if (_ambulanceIcon != null) {
         setState(() {
           _markers.removeWhere((m) => m.markerId.value == 'ambulance');
@@ -149,7 +145,7 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
       }
 
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(currentPos, 16.5));
-      setState(() => _remainingSeconds -= 48);
+      setState(() => _remainingSeconds -= 49);
     });
   }
 
@@ -165,12 +161,6 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
     return (bearing + 360) % 360;
   }
 
-  String _formatTime(int seconds) {
-    int min = seconds ~/ 60;
-    int sec = seconds % 60;
-    return "$min:${sec.toString().padLeft(2, '0')}";
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,14 +168,20 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text("Жедел жәрдем жолда", style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20)),
+        title: Text(
+          "Жаңа шақыру",
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 22),
+        ),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.red, Colors.redAccent])),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.red, Colors.redAccent]),
+          ),
         ),
       ),
       body: Stack(
         children: [
+          // Карта
           GoogleMap(
             initialCameraPosition: const CameraPosition(target: LatLng(43.2389, 76.8897), zoom: 15),
             myLocationEnabled: true,
@@ -194,46 +190,97 @@ class _AmbulanceTrackingPageState extends State<AmbulanceTrackingPage> {
             onMapCreated: (c) => _mapController = c,
           ),
 
+          // КРАСИВАЯ НИЖНЯЯ ПАНЕЛЬ — ТОЧНО КАК НА СКРИНШОТЕ
+                    // НИЖНЯЯ ПАНЕЛЬ — ТОЧНО КАК НА ПОСЛЕДНЕМ СКРИНШОТЕ (меньше и аккуратнее)
           Positioned(
-            bottom: 40,
             left: 20,
             right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.black87,
+                color: const Color(0xFF1E1E2E),
                 borderRadius: BorderRadius.circular(28),
-                boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 20)],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
-                        child: Image.asset('assets/ambulance_v3.png', width: 40, height: 40),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Бригада №17 жолда", style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                            Text("Жетеді: ${_formatTime(_remainingSeconds)}", style: GoogleFonts.manrope(fontSize: 16, color: Colors.white70)),
-                          ],
-                        ),
-                      ),
-                      Text("103", style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.7),
+                    blurRadius: 30,
+                    offset: const Offset(0, 12),
                   ),
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value: _step / (_ambulancePath.length - 1).toDouble(),
-                    backgroundColor: Colors.grey[800],
-                    valueColor: const AlwaysStoppedAnimation(Colors.red),
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Мини-иконка скорой (меньше и аккуратнее)
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        'assets/ambulance_v3.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  // Текст: Бригада №17 + Жолда
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Бригада №17",
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          "Жолда",
+                          style: GoogleFonts.manrope(
+                            fontSize: 15,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // МАЛЕНЬКИЙ КРАСНЫЙ ОВАЛЬНЫЙ ТАЙМЕР — КАК НАСТОЯЩИЙ КЛОН СКРИНШОТА!
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade600,
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.6),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _remainingSeconds > 0
+                          ? "${(_remainingSeconds ~/ 60).toString().padLeft(2,'0')}:${(_remainingSeconds %60).toString().padLeft(2,'0')}"
+                          : "00:00",
+                      style: GoogleFonts.inter(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ],
               ),

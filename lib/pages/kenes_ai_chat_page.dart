@@ -44,7 +44,7 @@ class _KenesAIChatPageState extends State<KenesAIChatPage> {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "model": "grok-beta",
+          "model": "grok-4-1-fast-reasoning",
           "messages": [
             {
               "role": "system",

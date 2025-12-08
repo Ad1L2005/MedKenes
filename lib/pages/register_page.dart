@@ -71,17 +71,8 @@ class _RegisterPageState extends State<RegisterPage> {
         'displayName': fullName,
         'email': email,
         'role': _selectedRole,
-        'createdAt': FieldValue.serverTimestamp(),
+        'registeredAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': user.uid,
-        'title': 'Қош келдіңіз!',
-        'message': 'Сіз сәтті тіркелдіңіз! Email-ді растауды ұмытпаңыз',
-        'type': 'registration',
-        'read': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
 
       if (mounted) {
         _showSnackBar('Сәтті тіркелдіңіз! Email-ді растаңыз', true);
@@ -122,15 +113,8 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          "Тіркелу",
-          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFF1E40AF), Color(0xFF06B6D4)]),
-          ),
-        ),
+        title: Text("Тіркелу", style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+        flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E40AF), Color(0xFF06B6D4)]))),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -138,17 +122,9 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-
-              // Заголовок
-              Text(
-                "Жаңа аккаунт құру",
-                style: GoogleFonts.manrope(fontSize: 16, color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-
+              Text("Жаңа аккаунт құру", style: GoogleFonts.manrope(fontSize: 16, color: Colors.white70), textAlign: TextAlign.center),
               const SizedBox(height: 40),
 
-              // Поля ввода
               _buildField(_firstNameController, "Аты", Icons.person_outline),
               const SizedBox(height: 16),
               _buildField(_lastNameController, "Тегі", Icons.person),
@@ -161,22 +137,47 @@ class _RegisterPageState extends State<RegisterPage> {
 
               const SizedBox(height: 50),
 
-              Text("Сіз кімсіз?", style: GoogleFonts.inter(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600)),
+              Text("Сіз кімсіз?", style: GoogleFonts.inter(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600)),
+const SizedBox(height: 30),
 
-              const SizedBox(height: 30),
+LayoutBuilder(
+  builder: (context, constraints) {
+    final double cardWidth = (constraints.maxWidth - 40) / 3;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _roleCardModern(
+          role: "patient",
+          title: "Мен\nпациентпін",
+          icon: Icons.person_outline,
+          color: const Color(0xFF06B6D4),
+          selectedColor: const Color(0xFF06B6D4),
+          width: cardWidth,
+        ),
+        _roleCardModern(
+          role: "doctor",
+          title: "Мен\nдәрігермін",
+          icon: Icons.local_hospital_outlined,
+          color: Colors.cyan,
+          selectedColor: Colors.cyan,
+          width: cardWidth,
+        ),
+        _roleCardModern(
+          role: "ambulance",
+          title: "Мен жедел\nжәрдеммін",
+          icon: Icons.emergency,
+          color: Colors.cyan,
+          selectedColor: Colors.cyan,
+          width: cardWidth,
+        ),
+      ],
+    );
+  },
+),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _roleCard("patient", "Мен пациентпін", Icons.person),
-                  const SizedBox(width: 24),
-                  _roleCard("doctor", "Мен дәрігермін", Icons.local_hospital),
-                ],
-              ),
+const SizedBox(height: 70),
 
-              const SizedBox(height: 60),
-
-              // Кнопка Тіркелу
+              // Кнопка регистрации
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -202,15 +203,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
 
               const SizedBox(height: 20),
-
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Кіру бетіне оралу",
-                  style: GoogleFonts.manrope(color: const Color(0xFF06B6D4), fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-              ),
-
+              TextButton(onPressed: () => Navigator.pop(context), child: Text("Кіру бетіне оралу", style: GoogleFonts.manrope(color: const Color(0xFF06B6D4), fontWeight: FontWeight.w600))),
               const SizedBox(height: 40),
             ],
           ),
@@ -227,8 +220,8 @@ class _RegisterPageState extends State<RegisterPage> {
       style: const TextStyle(color: Colors.white, fontSize: 16),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white54, fontSize: 16),
-        prefixIcon: Icon(icon, color: const Color(0xFF06B6D4), size: 22),
+        hintStyle: const TextStyle(color: Colors.white54),
+        prefixIcon: Icon(icon, color: const Color(0xFF06B6D4)),
         filled: true,
         fillColor: const Color(0xFF1E293B),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
@@ -238,29 +231,89 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _roleCard(String role, String title, IconData icon) {
-    bool selected = _selectedRole == role;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedRole = role),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: 140,
-        height: 130,
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF06B6D4) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: selected ? const Color(0xFF06B6D4) : Colors.transparent, width: 2),
-          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 15, offset: const Offset(0, 8))],
+  // ← КРАСИВАЯ КАРТОЧКА С ПОЛОСАМИ ←
+  Widget _roleCardModern({
+  required String role,
+  required String title,
+  required IconData icon,
+  required Color color,
+  required Color selectedColor,
+  required double width,
+}) {
+  final bool selected = _selectedRole == role;
+
+  return GestureDetector(
+    onTap: () => setState(() => _selectedRole = role),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      width: width,
+      height: 135,
+      decoration: BoxDecoration(
+        color: selected ? selectedColor.withOpacity(0.2) : const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: selected ? selectedColor : Colors.transparent,
+          width: 2.5,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: selected ? Colors.white : const Color(0xFF06B6D4)),
-            const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: GoogleFonts.manrope(fontSize: 14, color: selected ? Colors.white : Colors.white70, fontWeight: FontWeight.w600)),
-          ],
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: selected ? selectedColor.withOpacity(0.5) : Colors.black38,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-    );
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 46,
+            color: selected ? Colors.white : color,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              height: 1.3,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : Colors.white70,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
   }
+
+
+// ← ЭТОТ КЛАСС ДОЛЖЕН БЫТЬ ВНЕ _RegisterPageState, НО В ТОМ ЖЕ ФАЙЛЕ! ←
+class DiagonalStripesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final yellow = Paint()..color = Colors.amber;
+    final black = Paint()..color = Colors.black87;
+
+    const stripeWidth = 28.0;
+    double offset = -size.height;
+
+    while (offset < size.height * 2) {
+      final path = Path()
+        ..moveTo(0, offset)
+        ..lineTo(size.width, offset + size.width * 0.7)
+        ..lineTo(size.width, offset + stripeWidth + size.width * 0.7)
+        ..lineTo(0, offset + stripeWidth)
+        ..close();
+
+      canvas.drawPath(path, ((offset / stripeWidth) % 2).abs() < 0.5 ? yellow : black);
+      offset += stripeWidth;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

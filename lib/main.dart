@@ -1,13 +1,12 @@
-// lib/main.dart — АБСОЛЮТНО ПРАВИЛЬНАЯ ВЕРСИЯ 2025 (БЕЗ КРАСНОГО ЭКРАНА)
+// lib/main.dart — ВСЕГДА СТАРТ С LOGIN, НО С УМНОЙ ЛОГИКОЙ
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'pages/auth_wrapper.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/role_router.dart';
+import 'pages/auth_wrapper.dart';
 import 'services/firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,22 +26,19 @@ class MedKenesApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF06B6D4)),
-        // fontFamily: 'GoogleSans',
         scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
 
-      // ВНИМАНИЕ: ЛИБО home, ЛИБО initialRoute + routes
-      // МЫ ВЫБИРАЕМ routes + initialRoute — ЭТО ПРАВИЛЬНЫЙ ПУТЬ
+      // ВСЕГДА начинаем с LoginPage
+      home: const LoginPage(),
 
-      initialRoute: '/',                    // ← стартуем с AuthWrapper
+      // Остальные маршруты — на всякий случай (можно потом расширять)
       routes: {
-        '/': (context) => const AuthWrapper(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/home': (context) => const RoleRouter(),  // ← если захочешь потом
+        '/home': (context) => const RoleRouter(),
+        '/auth': (context) => const AuthWrapper(), // если захочешь вернуть
       },
-
-      // home: УДАЛИЛ СОВСЕМ — ОН БЫЛ ПРИЧИНОЙ КРАСНОГО ЭКРАНА
     );
   }
 }
